@@ -3,31 +3,37 @@ from kivy.lang import Builder
 from kivy.uix.boxlayout import BoxLayout
 
 KV = """
+#:import Factory kivy.factory.Factory
 #:import Calendar calendar.Calendar
 <Day@Button>:
+    day: 0
     datepicker: self.parent.datepicker
+    day_color: [1,1,1,1] if self.day > 0 else [.5,.5,1,1]
     color: [1,1,1,1]
-    background_color: root.color if self.text != "" else [0,0,0,0]
-    disabled: True if self.text == "" else False
+    background_color: root.day_color if self.day != 0 else [0,0,0,0]
+    text: f"{abs(self.day)}" if self.day != 0 else ""
+    disabled: True if self.day == 0 else False
     on_release:
         root.datepicker.picked = [int(self.text), root.datepicker.month, root.datepicker.year]
+
 <Week@BoxLayout>:
     datepicker: root.parent
-    weekdays: ["","","","","","",""]
+    weekdays: [0,0,0,0,0,0,0]
     Day:
-        text: str(root.weekdays[0])
+        day: root.weekdays[0]
     Day:
-        text: str(root.weekdays[1])
+        day: root.weekdays[1]
     Day:
-        text: str(root.weekdays[2])
+        day: root.weekdays[2]
     Day:
-        text: str(root.weekdays[3])
+        day: root.weekdays[3]
     Day:
-        text: str(root.weekdays[4])
+        day: root.weekdays[4]
     Day:
-        text: str(root.weekdays[5])
+        day: root.weekdays[5]
     Day:
-        text: str(root.weekdays[6])
+        day: root.weekdays[6]
+        
 <WeekDays@BoxLayout>:
     Label:
         text: "Mon"
@@ -43,6 +49,7 @@ KV = """
         text: "Sat"
     Label:
         text: "Sun"
+        
 <NavBar@BoxLayout>:
     datepicker: self.parent
     Spinner:
@@ -78,7 +85,7 @@ KV = """
     picked: ["","",""]
     months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     calendar: Calendar()
-    days: [(i if i > 0 else "") for i in self.calendar.itermonthdays(self.year, self.month)] + [""] * 14
+    days: app.get_days(self.calendar, self.year, self.month)
     orientation: "vertical"
     NavBar:
     WeekDays:
@@ -106,5 +113,12 @@ Builder.load_string(KV)
 class MyApp(App):
     def build(self):
         return DatePicker()
+
+    def get_days(self, cal, year, month):
+        d1 = cal.itermonthdays(year, month)
+        d2 = cal.itermonthdays3(year, month)
+        days = [(i if i > 0 else j[2]*-1) for i,j in zip(d1,d2)] + [0]*14
+        print(days)
+        return days
 
 MyApp().run()
